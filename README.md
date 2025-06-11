@@ -1,20 +1,20 @@
-To join your **Fedora 41** desktop (`argos.sleepy-puppy.com`) to the **Windows Server 2022 Active Directory** (`sleepy-puppy.com`), follow these steps:
+To join your **Fedora 41** desktop (`hostname.domain.com`) to the **Windows Server 2022 Active Directory** (`domain.com`), follow these steps:
 
 ---
 
 ### **1. Ensure System Requirements**
 Before starting, ensure the following:
-- **Network connectivity**: Verify `argos.sleepy-puppy.com` can reach `oenomaus.sleepy-puppy.com` (`192.168.3.30`).
+- **Network connectivity**: Verify `hostname.domain.com` can reach `DC.domain.com` (`xxx.xxx.xxx.xxx`).
 - **Time synchronization**: Ensure both machines have synchronized time using NTP.
 - **Administrator credentials**: You have the **Administrator** account credentials to join the domain.
-- **AD User account**: You want to log in using `r.edwards`.
+- **AD User account**: You want to log in using `username`.
 
 ---
 
 ### **2. Configure Network and Hostname**
 Ensure your Fedora desktop has the correct hostname:
 ```bash
-hostnamectl set-hostname argos.sleepy-puppy.com
+hostnamectl set-hostname hostname.domain.com
 ```
 Then, verify it:
 ```bash
@@ -24,7 +24,7 @@ hostnamectl
 ---
 
 ### **3. Configure DNS to Use the Domain Controller**
-Edit the DNS settings to point to your **Active Directory DNS** (`oenomaus.sleepy-puppy.com`):
+Edit the DNS settings to point to your **Active Directory DNS** (`dc.domain.com`):
 
 1. Open NetworkManager configuration:
    ```bash
@@ -33,7 +33,7 @@ Edit the DNS settings to point to your **Active Directory DNS** (`oenomaus.sleep
 2. Find your active connection name (e.g., `ens33`).
 3. Set the DNS server:
    ```bash
-   nmcli con mod ens33 ipv4.dns "192.168.3.30"
+   nmcli con mod ens33 ipv4.dns "xxx.xxx.xxx.xxx"
    ```
 4. Apply changes:
    ```bash
@@ -41,7 +41,7 @@ Edit the DNS settings to point to your **Active Directory DNS** (`oenomaus.sleep
    ```
 5. Verify DNS:
    ```bash
-   nslookup oenomaus.sleepy-puppy.com
+   nslookup dc.domain.com
    ```
 
 ---
@@ -62,7 +62,7 @@ sudo systemctl enable --now oddjobd
 ### **5. Discover the Active Directory Domain**
 Test domain discovery:
 ```bash
-sudo realm discover sleepy-puppy.com
+sudo realm discover domain.com
 ```
 If successful, it should return details about your domain.
 
@@ -71,7 +71,7 @@ If successful, it should return details about your domain.
 ### **6. Join Fedora to Active Directory**
 Use the `administrator` credentials to join:
 ```bash
-sudo realm join --user=Administrator sleepy-puppy.com
+sudo realm join --user=Administrator domain.com
 ```
 You'll be prompted for the **Administrator** password. If successful, Fedora is now part of the domain.
 
@@ -90,11 +90,11 @@ sudo nano /etc/sssd/sssd.conf
 Ensure it contains:
 ```ini
 [sssd]
-domains = sleepy-puppy.com
+domains = domain.com
 config_file_version = 2
 services = nss, pam
 
-[domain/sleepy-puppy.com]
+[domain/domain.com]
 id_provider = ad
 access_provider = ad
 auth_provider = ad
@@ -120,9 +120,9 @@ sudo systemctl enable sssd
 ---
 
 ### **8. Allow AD Users to Log In**
-Verify the AD user `r.edwards`:
+Verify the AD user `username`:
 ```bash
-id r.edwards
+id username
 ```
 If it returns a UID and GID, authentication is working.
 
@@ -144,9 +144,9 @@ sudo systemctl restart sssd
 ---
 
 ### **9. Test Login**
-Log in as `r.edwards`:
+Log in as `username`:
 ```bash
-su - r.edwards
+su - username
 ```
 Alternatively, try logging in through the GUI.
 
@@ -155,11 +155,11 @@ Alternatively, try logging in through the GUI.
 ### **10. Verify Authentication**
 Check AD authentication:
 ```bash
-getent passwd r.edwards
+getent passwd username
 ```
 Check group memberships:
 ```bash
-groups r.edwards
+groups username
 ```
 
 ---
@@ -174,13 +174,13 @@ Restart the system and test logging in.
 ---
 
 ### **12. Optional: Enable Sudo for AD Users**
-If you want `r.edwards` to have sudo access, add it to the `wheel` group:
+If you want `username` to have sudo access, add it to the `wheel` group:
 ```bash
-sudo usermod -aG wheel r.edwards
+sudo usermod -aG wheel username
 ```
 Or add a rule:
 ```bash
-echo "r.edwards ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/r.edwards
+echo "username ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/username
 ```
 
 ---
@@ -190,7 +190,7 @@ echo "r.edwards ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/r.edwards
   ```bash
   sudo reboot
   ```
-- **Try logging in using `r.edwards` via GUI or SSH.**
+- **Try logging in using `username` via GUI or SSH.**
 - **Test authentication by running:**  
   ```bash
   sudo -i
@@ -198,4 +198,4 @@ echo "r.edwards ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/r.edwards
 
 ---
 
-This setup ensures that `argos.sleepy-puppy.com` is fully integrated into `sleepy-puppy.com`, allowing `r.edwards` to log in seamlessly using **Active Directory credentials**.
+This setup ensures that `hostname.domain.com` is fully integrated into `domain.com`, allowing `username` to log in seamlessly using **Active Directory credentials**.
